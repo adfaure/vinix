@@ -20,7 +20,12 @@ from docopt import docopt
 
 def split_nix_derivation(store_path: str) -> str:
     basename = os.path.basename(store_path)
-    return "-".join(basename.split("-"))[1:]
+    if "-" in basename:
+      splitted = basename.split("-")
+      if len(splitted[0]) == 32: # If its a store hash
+        return "-".join(basename.split("-"))[1:]
+
+    return basename
 
 
 def get_size(start_path: str):
