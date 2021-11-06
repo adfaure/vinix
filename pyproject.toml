@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "vinix"
 version = "0.1.0"
-description = ""
+description = "Simple tooling to visualize nix derivations dependencies as a treemap or a graph."
 authors = ["Faure Adrien <adrien.faure2@gmail.com>"]
 
 [tool.poetry.dependencies]
