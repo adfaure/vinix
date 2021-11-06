@@ -1,6 +1,5 @@
 #!/usr/bin/env Rscript
 
-library(viridis)
 library(readr)
 library(treemap)
 

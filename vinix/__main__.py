@@ -3,6 +3,7 @@
 Usage:
   vinix treemap <store-path> [-o=<filename>]
   vinix graph <store-path> [-o=<filename>]
+  vinix printsize <store-path>
 
 Options:
   -h --help     Show this screen.
@@ -21,9 +22,9 @@ from docopt import docopt
 def split_nix_derivation(store_path: str) -> str:
     basename = os.path.basename(store_path)
     if "-" in basename:
-      splitted = basename.split("-")
-      if len(splitted[0]) == 32: # If its a store hash
-        return "-".join(basename.split("-"))[1:]
+        splitted = basename.split("-")
+        if len(splitted[0]) == 32:  # If its a store hash
+            return "-".join(basename.split("-"))[1:]
 
     return basename
 
@@ -79,6 +80,17 @@ def print_treemap(store_path, result_file):
     output = p.communicate(input=input_string.encode())[0]
 
 
+def print_total_size(store_path: str) -> int:
+    # Get the store reference of the store provided store path
+    output = check_output("nix-store -qR {}".format(store_path), shell=True)
+
+    total_size = 0
+    for path in output.decode().splitlines():
+        total_size += get_size(path)
+
+    return total_size
+
+
 def main() -> int:
     arguments = docopt(__doc__, version="vinix 0.1.0")
 
@@ -91,6 +103,12 @@ def main() -> int:
         print_treemap(arguments["<store-path>"], result_file)
     elif arguments["graph"]:
         print_graph(arguments["<store-path>"], result_file)
+    elif arguments["printsize"]:
+        print(
+            "Total derivation size: {} (bytes)".format(
+                print_total_size(arguments["<store-path>"])
+            )
+        )
 
     return 0
 
