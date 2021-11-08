@@ -24,7 +24,7 @@ def split_nix_derivation(store_path: str) -> str:
     if "-" in basename:
         splitted = basename.split("-")
         if len(splitted[0]) == 32:  # If its a store hash
-            return "-".join(basename.split("-"))[1:]
+            return "-".join(splitted[1:])
 
     return basename
 
