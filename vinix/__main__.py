@@ -4,6 +4,7 @@ Usage:
   vinix treemap <store-path> [-o=<filename>]
   vinix graph <store-path> [-o=<filename>]
   vinix printsize <store-path>
+  vinix csv <store-path> [-o=<filename>]
 
 Options:
   -h --help     Show this screen.
@@ -24,9 +25,13 @@ def split_nix_derivation(store_path: str) -> str:
     if "-" in basename:
         splitted = basename.split("-")
         if len(splitted[0]) == 32:  # If its a store hash
-            return "-".join(splitted[1:])
+            # For derivation without version...
+            if len(splitted) == 2:
+                return (splitted[0], splitted[1], "")
+            else:
+                return (splitted[0], splitted[1], splitted[2])
 
-    return basename
+    return (basename, None, None)
 
 
 def get_size(start_path: str):
@@ -53,6 +58,27 @@ def print_graph(store_path, result_file):
     subprocess.call("dot -Tpng -o {} {}".format(result_file, mytmpfile.name).split(" "))
 
 
+def print_csv(store_path, result_file):
+    # Get the store reference of the store provided store path
+    output = check_output("nix-store -qR {}".format(store_path), shell=True)
+
+    # Construct the data string that will be piped into the r script
+    input_string = ""
+    for path in output.decode().splitlines():
+        size = get_size(path)
+        if size == 0:
+            # print("path {} is of size 0, skipping...".format(size))
+            continue
+
+        # Remove the hash of the path
+        (nix_hash, package_name, version) = split_nix_derivation(path)
+        input_string += "{},{},{},{}\n".format(size, nix_hash, package_name, version)
+
+    with open(result_file, "w") as f:
+        f.write("size,hash,name,version\n")
+        f.write(input_string)
+
+
 def print_treemap(store_path, result_file):
     # Get the store reference of the store provided store path
     output = check_output("nix-store -qR {}".format(store_path), shell=True)
@@ -66,7 +92,7 @@ def print_treemap(store_path, result_file):
             continue
 
         # Remove the hash of the path
-        package_name = split_nix_derivation(path)
+        (nix_hash, package_name, version) = split_nix_derivation(path)
         input_string += "{} {}\n".format(size, package_name)
 
     p = subprocess.Popen(
@@ -97,10 +123,22 @@ def main() -> int:
     if "--output" in arguments and arguments["--output"] is not None:
         result_file = arguments["--output"]
     else:
-        result_file = split_nix_derivation(arguments["<store-path>"]) + ".png"
+        (nix_hash_or_name, package_name, version) = split_nix_derivation(
+            arguments["<store-path>"]
+        )
+        if package_name is None:
+            result_file = nix_hash_or_name
+        else:
+            result_file = package_name + "-" + version
+        if arguments["treemap"] or arguments["graph"]:
+            result_file += ".png"
+        if arguments["csv"]:
+            result_file += ".csv"
 
     if arguments["treemap"]:
         print_treemap(arguments["<store-path>"], result_file)
+    elif arguments["csv"]:
+        print_csv(arguments["<store-path>"], result_file)
     elif arguments["graph"]:
         print_graph(arguments["<store-path>"], result_file)
     elif arguments["printsize"]:
