@@ -6,6 +6,14 @@
     flake-utils = { url = "github:numtide/flake-utils"; };
   };
 
+   nixConfig = {
+    substituters = [ "https://vinix.cachix.org" ];
+    trusted-public-keys = [
+      "vinix.cachix.org-1:d0T0FsoxO6us47YfoHU0SKizukCUjEIR30DZhDuIBC8="
+    ];
+  };
+
+
   outputs = { self, nixpkgs, flake-utils, ... }:
 
     flake-utils.lib.eachDefaultSystem (system:
