@@ -6,13 +6,13 @@
     flake-utils = { url = "github:numtide/flake-utils"; };
   };
 
-   nixConfig = {
-    substituters = [ "https://vinix.cachix.org" ];
+  nixConfig = {
+    substituters = [ "https://vinix.cachix.org" "https://cache.nixos.org/" ];
     trusted-public-keys = [
       "vinix.cachix.org-1:d0T0FsoxO6us47YfoHU0SKizukCUjEIR30DZhDuIBC8="
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
     ];
   };
-
 
   outputs = { self, nixpkgs, flake-utils, ... }:
 
